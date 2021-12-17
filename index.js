@@ -38,9 +38,17 @@ async function run() {
         });
 
         //Add Reviews 
+        app.post('/addReviews', async (req, res) => {
+            const result = await reviewCollection.insertOne(req.body);
+            console.log(result);
+            res.send(result);
+        });
 
         //Get all reviews added by users and show on the home page
-
+        app.get('/allReviews', async (req, res) => {
+            const result = await reviewCollection.find({}).toArray();
+            res.send(result);
+        })
 
         //POST Users data
         app.post('/users', async (req, res) => {
