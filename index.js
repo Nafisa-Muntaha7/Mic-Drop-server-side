@@ -20,6 +20,8 @@ async function run() {
         const database = client.db('mic_drop');
         const programCollection = database.collection('programs');
         const userCollection = database.collection('users');
+        const eventCollection = database.collection('events');
+        const reviewCollection = database.collection('reviews');
 
         //GET Programs API
         app.get('/programs', async (req, res) => {
@@ -28,12 +30,35 @@ async function run() {
             res.send(programs);
         });
 
+        //GET Events API
+        app.get('/events', async (req, res) => {
+            const cursor = eventCollection.find({});
+            const events = await cursor.toArray();
+            res.send(events);
+        });
+
+        //Add Reviews 
+
+        //Get all reviews added by users and show on the home page
+
+
         //POST Users data
         app.post('/users', async (req, res) => {
             const user = req.body;
             const result = await userCollection.insertOne(user);
-            console.log(user);
             res.json(result);
+        });
+
+        //Check if user is Admin
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
         });
 
         //Upsert users data
@@ -43,6 +68,16 @@ async function run() {
             const options = { upsert: true };
             const update = { $set: user };
             const result = await userCollection.updateOne(filter, update, options);
+            res.json(result);
+        });
+
+        //Set role to admin
+        app.put('/users/admin', async (req, res) => {
+            const user = req.body;
+            console.log('put', user)
+            const filter = { email: user.email };
+            const update = { $set: { role: 'admin' } };
+            const result = await userCollection.updateOne(filter, update);
             res.json(result);
         });
 
