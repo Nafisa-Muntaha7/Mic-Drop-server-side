@@ -19,6 +19,7 @@ async function run() {
         console.log('Database connected');
         const database = client.db('mic_drop');
         const programCollection = database.collection('programs');
+        const purchaseCollection = database.collection('purchases');
         const userCollection = database.collection('users');
         const eventCollection = database.collection('events');
         const reviewCollection = database.collection('reviews');
@@ -28,6 +29,32 @@ async function run() {
             const cursor = programCollection.find({});
             const programs = await cursor.toArray();
             res.send(programs);
+        });
+
+        //POST purchase programs
+        app.post('/purchases', async (req, res) => {
+            const purchase = req.body;
+            const result = await purchaseCollection.insertOne(purchase);
+            console.log(result);
+            res.json(result);
+        });
+
+        //GET purchase data by filtering with user email
+        app.get('/purchases', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            console.log(query);
+            const cursor = purchaseCollection.find(query);
+            const purchases = await cursor.toArray();
+            res.send(purchases);
+        });
+
+        //GET purchase id to pay fir the program
+        app.get('/purchases/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await purchaseCollection.findOne(query);
+            res.json(result);
         });
 
         //GET Events API
@@ -48,7 +75,7 @@ async function run() {
         app.get('/allReviews', async (req, res) => {
             const result = await reviewCollection.find({}).toArray();
             res.send(result);
-        })
+        });
 
         //POST Users data
         app.post('/users', async (req, res) => {
