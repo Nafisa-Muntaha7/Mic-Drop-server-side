@@ -4,8 +4,7 @@ require('dotenv').config();
 const cors = require('cors');
 const ObjectId = require('mongodb').ObjectId;
 const app = express();
-const port = process.env.PORT || 7000;
-
+const stripe = require('stripe')(process.env.STRIPE_SECRET);
 app.use(cors());
 app.use(express.json());
 
@@ -49,12 +48,24 @@ async function run() {
             res.send(purchases);
         });
 
-        //GET purchase id to pay fir the program
+        //GET purchase id to pay for the program
         app.get('/purchases/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await purchaseCollection.findOne(query);
             res.json(result);
+        });
+
+        //POST payment process
+        app.post('/create-payment-intent', async (req, res) => {
+            const paymentInfo = req.body;
+            const amount = paymentInfo.price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
+                amount: amount,
+                payment_method_types: ['card']
+            });
+            res.json({ clientSecret: paymentIntent.client_secret })
         });
 
         //GET Events API
